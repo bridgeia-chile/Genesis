@@ -112,7 +112,7 @@ sudo sysctl -p
 ### Option A: Standard Install (Recommended)
 
 ```bash
-curl -fsSL https://genesis.ai/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/bridgeia-chile/Genesis/main/install.sh | bash
 ```
 
 ### Option B: Hackable Install (For tinkering)

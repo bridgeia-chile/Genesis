@@ -43,6 +43,49 @@ ensure_pnpm() {
     log_info "pnpm installed ($(pnpm --version))"
 }
 
+# Install system build dependencies for native modules
+install_build_deps() {
+    log_info "Checking system build dependencies..."
+    if command_exists apt-get; then
+        log_info "Detected Debian/Ubuntu, installing build-essential and python3..."
+        sudo apt-get update
+        sudo apt-get install -y build-essential python3 pkg-config
+    elif command_exists dnf; then
+        log_info "Detected Fedora/RHEL, installing development tools..."
+        sudo dnf groupinstall -y "Development Tools"
+        sudo dnf install -y python3 pkgconfig
+    elif command_exists yum; then
+        log_info "Detected CentOS/RHEL (old), installing development tools..."
+        sudo yum groupinstall -y "Development Tools"
+        sudo yum install -y python3 pkgconfig
+    elif command_exists apk; then
+        log_info "Detected Alpine, installing build dependencies..."
+        sudo apk add --no-cache build-base python3 pkgconfig
+    else
+        log_warn "Unknown package manager. You may need to install build tools (gcc, g++, make, python3) manually."
+    fi
+}
+
+# Setup swap for low-memory ARM devices (Raspberry Pi)
+setup_swap_if_needed() {
+    local total_ram=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+    local swap_size=$((2 * 1024 * 1024)) # 2GB in kB
+    if [[ "$(uname -m)" == "arm"* || "$(uname -m)" == "aarch64" ]] && [[ $total_ram -lt $swap_size ]]; then
+        log_warn "Low memory ARM device detected. Checking swap..."
+        if ! swapon --show | grep -q '.'; then
+            log_info "No swap found. Creating 2GB swap file..."
+            sudo fallocate -l 2G /swapfile
+            sudo chmod 600 /swapfile
+            sudo mkswap /swapfile
+            sudo swapon /swapfile
+            echo "/swapfile none swap sw 0 0" | sudo tee -a /etc/fstab
+            log_info "Swap enabled."
+        else
+            log_info "Swap already configured."
+        fi
+    fi
+}
+
 # Clone repository if not already in a Genesis directory
 clone_if_needed() {
     local target_dir="${1:-genesis}"
@@ -69,6 +112,10 @@ main() {
     # Clone if needed
     clone_if_needed
     
+    # Install system build dependencies
+    install_build_deps
+    setup_swap_if_needed
+
     # Install dependencies
     log_info "Installing dependencies (this may take a few minutes)..."
     pnpm install
