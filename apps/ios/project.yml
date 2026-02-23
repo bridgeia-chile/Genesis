@@ -1,0 +1,232 @@
+name: genesis
+options:
+  bundleIdPrefix: ai.genesis
+  deploymentTarget:
+    iOS: "18.0"
+  xcodeVersion: "16.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+
+packages:
+  genesisKit:
+    path: ../shared/genesisKit
+  Swabble:
+    path: ../../Swabble
+
+schemes:
+  genesis:
+    shared: true
+    build:
+      targets:
+        genesis: all
+    test:
+      targets:
+        - genesisTests
+
+targets:
+  genesis:
+    type: application
+    platform: iOS
+    configFiles:
+      Debug: Signing.xcconfig
+      Release: Signing.xcconfig
+    sources:
+      - path: Sources
+    dependencies:
+      - target: genesisShareExtension
+        embed: true
+      - target: genesisWatchApp
+      - package: genesisKit
+      - package: genesisKit
+        product: genesisChatUI
+      - package: genesisKit
+        product: genesisProtocol
+      - package: Swabble
+        product: SwabbleKit
+      - sdk: AppIntents.framework
+    preBuildScripts:
+      - name: SwiftFormat (lint)
+        basedOnDependencyAnalysis: false
+        inputFileLists:
+          - $(SRCROOT)/SwiftSources.input.xcfilelist
+        script: |
+          set -euo pipefail
+          export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+          if ! command -v swiftformat >/dev/null 2>&1; then
+            echo "error: swiftformat not found (brew install swiftformat)" >&2
+            exit 1
+          fi
+          swiftformat --lint --config "$SRCROOT/../../.swiftformat" \
+            --filelist "$SRCROOT/SwiftSources.input.xcfilelist"
+      - name: SwiftLint
+        basedOnDependencyAnalysis: false
+        inputFileLists:
+          - $(SRCROOT)/SwiftSources.input.xcfilelist
+        script: |
+          set -euo pipefail
+          export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+          if ! command -v swiftlint >/dev/null 2>&1; then
+            echo "error: swiftlint not found (brew install swiftlint)" >&2
+            exit 1
+          fi
+          swiftlint lint --config "$SRCROOT/.swiftlint.yml" --use-script-input-file-lists
+    settings:
+      base:
+        CODE_SIGN_IDENTITY: "Apple Development"
+        CODE_SIGN_ENTITLEMENTS: Sources/genesis.entitlements
+        CODE_SIGN_STYLE: "$(genesis_CODE_SIGN_STYLE)"
+        DEVELOPMENT_TEAM: "$(genesis_DEVELOPMENT_TEAM)"
+        PRODUCT_BUNDLE_IDENTIFIER: "$(genesis_APP_BUNDLE_ID)"
+        PROVISIONING_PROFILE_SPECIFIER: "$(genesis_APP_PROFILE)"
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        ENABLE_APPINTENTS_METADATA: NO
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: genesis
+        CFBundleIconName: AppIcon
+        CFBundleURLTypes:
+          - CFBundleURLName: ai.genesis.ios
+            CFBundleURLSchemes:
+              - genesis
+        CFBundleShortVersionString: "2026.2.23"
+        CFBundleVersion: "20260223"
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UIBackgroundModes:
+          - audio
+          - remote-notification
+        BGTaskSchedulerPermittedIdentifiers:
+          - ai.genesis.ios.bgrefresh
+        NSLocalNetworkUsageDescription: genesis discovers and connects to your genesis gateway on the local network.
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoadsInWebContent: true
+        NSBonjourServices:
+          - _genesis-gw._tcp
+        NSCameraUsageDescription: genesis can capture photos or short video clips when requested via the gateway.
+        NSLocationWhenInUseUsageDescription: genesis uses your location when you allow location sharing.
+        NSLocationAlwaysAndWhenInUseUsageDescription: genesis can share your location in the background when you enable Always.
+        NSMicrophoneUsageDescription: genesis needs microphone access for voice wake.
+        NSSpeechRecognitionUsageDescription: genesis uses on-device speech recognition for voice wake.
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+
+  genesisShareExtension:
+    type: app-extension
+    platform: iOS
+    configFiles:
+      Debug: Signing.xcconfig
+      Release: Signing.xcconfig
+    sources:
+      - path: ShareExtension
+    dependencies:
+      - package: genesisKit
+    settings:
+      base:
+        CODE_SIGN_IDENTITY: "Apple Development"
+        CODE_SIGN_STYLE: "$(genesis_CODE_SIGN_STYLE)"
+        DEVELOPMENT_TEAM: "$(genesis_DEVELOPMENT_TEAM)"
+        PRODUCT_BUNDLE_IDENTIFIER: "$(genesis_SHARE_BUNDLE_ID)"
+        PROVISIONING_PROFILE_SPECIFIER: "$(genesis_SHARE_PROFILE)"
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+    info:
+      path: ShareExtension/Info.plist
+      properties:
+        CFBundleDisplayName: genesis Share
+        CFBundleShortVersionString: "2026.2.23"
+        CFBundleVersion: "20260223"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).ShareViewController"
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsImageWithMaxCount: 10
+              NSExtensionActivationSupportsMovieWithMaxCount: 1
+
+  genesisWatchApp:
+    type: application.watchapp2
+    platform: watchOS
+    deploymentTarget: "11.0"
+    sources:
+      - path: WatchApp
+    dependencies:
+      - target: genesisWatchExtension
+    configFiles:
+      Debug: Config/Signing.xcconfig
+      Release: Config/Signing.xcconfig
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "$(genesis_WATCH_APP_BUNDLE_ID)"
+    info:
+      path: WatchApp/Info.plist
+      properties:
+        CFBundleDisplayName: genesis
+        CFBundleShortVersionString: "2026.2.23"
+        CFBundleVersion: "20260223"
+        WKCompanionAppBundleIdentifier: "$(genesis_APP_BUNDLE_ID)"
+        WKWatchKitApp: true
+
+  genesisWatchExtension:
+    type: watchkit2-extension
+    platform: watchOS
+    deploymentTarget: "11.0"
+    sources:
+      - path: WatchExtension/Sources
+    dependencies:
+      - sdk: WatchConnectivity.framework
+      - sdk: UserNotifications.framework
+    configFiles:
+      Debug: Config/Signing.xcconfig
+      Release: Config/Signing.xcconfig
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "$(genesis_WATCH_EXTENSION_BUNDLE_ID)"
+    info:
+      path: WatchExtension/Info.plist
+      properties:
+        CFBundleDisplayName: genesis
+        CFBundleShortVersionString: "2026.2.23"
+        CFBundleVersion: "20260223"
+        NSExtension:
+          NSExtensionAttributes:
+            WKAppBundleIdentifier: "$(genesis_WATCH_APP_BUNDLE_ID)"
+          NSExtensionPointIdentifier: com.apple.watchkit
+
+  genesisTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: genesis
+      - package: Swabble
+        product: SwabbleKit
+      - sdk: AppIntents.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.genesis.ios.tests
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/genesis.app/genesis"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+    info:
+      path: Tests/Info.plist
+      properties:
+        CFBundleDisplayName: genesisTests
+        CFBundleShortVersionString: "2026.2.23"
+        CFBundleVersion: "20260223"

@@ -1,0 +1,14 @@
+{
+  "name": "@genesis/discord",
+  "version": "2026.2.23",
+  "description": "genesis Discord channel plugin",
+  "type": "module",
+  "devDependencies": {
+    "genesis": "workspace:*"
+  },
+  "genesis": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

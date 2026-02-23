@@ -1,0 +1,14 @@
+// Copy to LocalSigning.xcconfig for personal local signing overrides.
+// This file is only an example and should stay committed.
+
+genesis_CODE_SIGN_STYLE = Automatic
+genesis_DEVELOPMENT_TEAM = P5Z8X89DJL
+
+genesis_APP_BUNDLE_ID = ai.genesis.ios.test.mariano
+genesis_SHARE_BUNDLE_ID = ai.genesis.ios.test.mariano.share
+genesis_WATCH_APP_BUNDLE_ID = ai.genesis.ios.test.mariano.watchkitapp
+genesis_WATCH_EXTENSION_BUNDLE_ID = ai.genesis.ios.test.mariano.watchkitapp.extension
+
+// Leave empty with automatic signing.
+genesis_APP_PROFILE =
+genesis_SHARE_PROFILE =

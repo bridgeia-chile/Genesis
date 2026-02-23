@@ -1,0 +1,14 @@
+{
+  "name": "@genesis/irc",
+  "version": "2026.2.23",
+  "description": "genesis IRC channel plugin",
+  "type": "module",
+  "devDependencies": {
+    "genesis": "workspace:*"
+  },
+  "genesis": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

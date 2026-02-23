@@ -1,0 +1,46 @@
+services:
+  genesis-gateway:
+    image: ${genesis_IMAGE:-genesis:local}
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      genesis_GATEWAY_TOKEN: ${genesis_GATEWAY_TOKEN}
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE}
+    volumes:
+      - ${genesis_CONFIG_DIR}:/home/node/.genesis
+      - ${genesis_WORKSPACE_DIR}:/home/node/.genesis/workspace
+    ports:
+      - "${genesis_GATEWAY_PORT:-18789}:18789"
+      - "${genesis_BRIDGE_PORT:-18790}:18790"
+    init: true
+    restart: unless-stopped
+    command:
+      [
+        "node",
+        "dist/index.js",
+        "gateway",
+        "--bind",
+        "${genesis_GATEWAY_BIND:-lan}",
+        "--port",
+        "18789",
+      ]
+
+  genesis-cli:
+    image: ${genesis_IMAGE:-genesis:local}
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      genesis_GATEWAY_TOKEN: ${genesis_GATEWAY_TOKEN}
+      BROWSER: echo
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE}
+    volumes:
+      - ${genesis_CONFIG_DIR}:/home/node/.genesis
+      - ${genesis_WORKSPACE_DIR}:/home/node/.genesis/workspace
+    stdin_open: true
+    tty: true
+    init: true
+    entrypoint: ["node", "dist/index.js"]

@@ -1,0 +1,17 @@
+// Default signing values for shared/repo builds.
+// Auto-selected local team overrides live in .local-signing.xcconfig (git-ignored).
+// Manual local overrides can go in LocalSigning.xcconfig (git-ignored).
+
+genesis_CODE_SIGN_STYLE = Manual
+genesis_DEVELOPMENT_TEAM = Y5PE65HELJ
+
+genesis_APP_BUNDLE_ID = ai.genesis.ios
+genesis_SHARE_BUNDLE_ID = ai.genesis.ios.share
+
+genesis_APP_PROFILE = ai.genesis.ios Development
+genesis_SHARE_PROFILE = ai.genesis.ios.share Development
+
+// Keep local includes after defaults: xcconfig is evaluated top-to-bottom,
+// so later assignments in local files override the defaults above.
+#include? ".local-signing.xcconfig"
+#include? "LocalSigning.xcconfig"

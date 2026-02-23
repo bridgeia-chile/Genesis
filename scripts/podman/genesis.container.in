@@ -1,0 +1,26 @@
+# genesis gateway — Podman Quadlet (rootless)
+# Installed by setup-podman.sh into genesis's ~/.config/containers/systemd/
+# {{genesis_HOME}} is replaced at install time.
+
+[Unit]
+Description=genesis gateway (rootless Podman)
+
+[Container]
+Image=genesis:local
+ContainerName=genesis
+UserNS=keep-id
+Volume={{genesis_HOME}}/.genesis:/home/node/.genesis
+EnvironmentFile={{genesis_HOME}}/.genesis/.env
+Environment=HOME=/home/node
+Environment=TERM=xterm-256color
+PublishPort=18789:18789
+PublishPort=18790:18790
+Pull=never
+Exec=node dist/index.js gateway --bind lan --port 18789
+
+[Service]
+TimeoutStartSec=300
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
